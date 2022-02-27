@@ -1,0 +1,81 @@
+## @file
+# Bootloader Payload Package
+#
+# Provides drivers and definitions to create uefi payload for bootloaders.
+#
+# Copyright (c) 2014 - 2020, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+DEFINE FD_BASE       = 0x00800000
+DEFINE FD_BLOCK_SIZE = 0x00001000
+
+DEFINE FD_SIZE     = 0x00020000
+DEFINE NUM_BLOCKS  = 0x20
+
+################################################################################
+[FD.SmmPayload]
+BaseAddress   = $(FD_BASE)
+Size          = $(FD_SIZE)
+ErasePolarity = 1
+BlockSize     = $(FD_BLOCK_SIZE)
+NumBlocks     = $(NUM_BLOCKS)
+
+0x00000000|$(FD_SIZE)
+FV = PLDFV
+
+################################################################################
+[FV.PLDFV]
+FvNameGuid         = 96E75986-6FDD-491E-9FD5-35E21AC45B45
+BlockSize          = $(FD_BLOCK_SIZE)
+FvAlignment        = 16
+ERASE_POLARITY     = 1
+MEMORY_MAPPED      = TRUE
+STICKY_WRITE       = TRUE
+LOCK_CAP           = TRUE
+LOCK_STATUS        = TRUE
+WRITE_DISABLED_CAP = TRUE
+WRITE_ENABLED_CAP  = TRUE
+WRITE_STATUS       = TRUE
+WRITE_LOCK_CAP     = TRUE
+WRITE_LOCK_STATUS  = TRUE
+READ_DISABLED_CAP  = TRUE
+READ_ENABLED_CAP   = TRUE
+READ_STATUS        = TRUE
+READ_LOCK_CAP      = TRUE
+READ_LOCK_STATUS   = TRUE
+
+#INF SmmPayloadPkg/SmmPayloadEntry/SmmPayloadEntry.inf
+INF StandaloneMmPkg/Core/StandaloneMmCore.inf
+INF StandaloneMmPkg/Drivers/StandaloneMmCpu/X64/PiSmmCpuStandaloneSmm.inf
+
+################################################################################
+#
+# Rules are use with the [FV] section's module INF type to define
+# how an FFS file is created for a given INF file. The following Rule are the default
+# rules for the different module type. User can add the customized rules to define the
+# content of the FFS file.
+#
+################################################################################
+
+[Rule.Common.SEC]
+  FILE SEC = $(NAMED_GUID) {
+    PE32     PE32   Align=32    $(INF_OUTPUT)/$(MODULE_NAME).efi
+  }
+
+[Rule.Common.MM_CORE_STANDALONE]
+  FILE MM_CORE_STANDALONE = $(NAMED_GUID) {
+    PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.MM_STANDALONE]
+  FILE MM_STANDALONE = $(NAMED_GUID) {
+    SMM_DEPEX    SMM_DEPEX Optional      $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32     PE32                    $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }

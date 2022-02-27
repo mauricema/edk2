@@ -1,0 +1,33 @@
+## @file
+# UEFI Payload Package
+#
+# Provides drivers and definitions to create uefi payload for bootloaders.
+#
+# Copyright (c) 2014 - 2021, Intel Corporation. All rights reserved.<BR>
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = SmmPayloadPkg
+  PACKAGE_GUID                   = AE813502-655D-4A3D-A962-995B8B5495C4
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+  Include
+
+
+[Guids]
+  #
+  ## Defines the token space for the UEFI Payload Package PCDs.
+  #
+  gSmmPayloadPkgTokenSpaceGuid  = {0x1d127ea, 0xf6f1, 0x4ef6, {0x94, 0x15, 0x8a, 0x0, 0x0, 0x93, 0xf8, 0x9d}}
+
+  gLoaderMpCpuTaskInfoGuid      = { 0xb2d12dd3, 0x1a61, 0x4ef8, { 0xa6, 0xb8, 0xd9, 0x48, 0x92, 0x39, 0x4c, 0xc0 } }
+
+[Ppis]
+
+[Protocols]
+
+[PcdsFixedAtBuild, PcdsPatchableInModule]

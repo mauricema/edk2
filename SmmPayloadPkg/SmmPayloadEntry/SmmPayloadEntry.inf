@@ -1,0 +1,60 @@
+## @file
+#  This is the first module for UEFI payload.
+#
+#  Copyright (c) 2006 - 2021, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2017, AMD Incorporated. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PayloadEntry
+  FILE_GUID                      = 2119BBD7-9432-4f47-B5E2-5C4EA31B6BDC
+  MODULE_TYPE                    = SEC
+  VERSION_STRING                 = 1.0
+
+#
+# The following information is for reference only and not required by the build tools.
+#
+#  VALID_ARCHITECTURES           = IA32 X64
+#
+
+[Sources]
+  SmmPayloadEntry.c
+  StandaloneMmIpl.c
+  MemoryAllocation.c
+  Hob.c
+  FvLib.c
+
+
+[Sources.X64]
+  X64/LoadSmmCore.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  StandaloneMmPkg/StandaloneMmPkg.dec
+  SmmPayloadPkg/SmmPayloadPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  SerialPortLib
+  PeCoffLib
+  CacheMaintenanceLib
+
+[Guids]
+  gMmCoreDataHobGuid
+  gEfiSmmSmramMemoryGuid
+  gEfiEventDxeDispatchGuid
+  gEfiHobMemoryAllocModuleGuid
+  gEfiHobMemoryAllocStackGuid
+  gMpInformationHobGuid
+  gLoaderMpCpuTaskInfoGuid
+
+[Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressSmmCodePageNumber     ## SOMETIMES_CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable        ## CONSUMES
