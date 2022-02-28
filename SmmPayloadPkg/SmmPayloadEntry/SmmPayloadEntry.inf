@@ -27,6 +27,7 @@
   MemoryAllocation.c
   Hob.c
   FvLib.c
+  AcpiTable.c
 
 
 [Sources.X64]
@@ -37,6 +38,7 @@
   MdeModulePkg/MdeModulePkg.dec
   StandaloneMmPkg/StandaloneMmPkg.dec
   SmmPayloadPkg/SmmPayloadPkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -54,7 +56,15 @@
   gEfiHobMemoryAllocStackGuid
   gMpInformationHobGuid
   gLoaderMpCpuTaskInfoGuid
+  gUniversalPayloadSerialPortInfoGuid
+  gSmmRegisterInfoGuid
+  gUniversalPayloadAcpiTableGuid
+  gUefiAcpiBoardInfoGuid
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdLoadFixAddressSmmCodePageNumber     ## SOMETIMES_CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdLoadModuleAtFixAddressEnable        ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio         ## PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase    ## PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate        ## PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride  ## PRODUCES

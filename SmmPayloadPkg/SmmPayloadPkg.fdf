@@ -47,7 +47,7 @@ READ_STATUS        = TRUE
 READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 
-#INF SmmPayloadPkg/SmmPayloadEntry/SmmPayloadEntry.inf
+INF SmmPayloadPkg/SmmPayloadEntry/SmmPayloadEntry.inf
 INF StandaloneMmPkg/Core/StandaloneMmCore.inf
 INF StandaloneMmPkg/Drivers/StandaloneMmCpu/X64/PiSmmCpuStandaloneSmm.inf
 INF SmmPayloadPkg/SmmSwSmiHandler/SmmSwSmiHandler.inf

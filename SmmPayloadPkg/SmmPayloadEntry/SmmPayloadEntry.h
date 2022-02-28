@@ -16,6 +16,7 @@
 #include <Library/DebugLib.h>
 #include <Library/HobLib.h>
 #include <Guid/MpCpuTaskInfoHob.h>
+#include <Guid/AcpiBoardInfoGuid.h>
 
 /**
   Auto-generated function that calls the library constructors for all of the module's
@@ -107,5 +108,18 @@ EFIAPI
 BuildMpInfoHob (
   IN   EFI_PEI_HOB_POINTERS  Hob
   );
+
+/**
+  Build ACPI board info HOB using infomation from ACPI table
+
+  @param  AcpiTableBase      ACPI table start address in memory
+
+  @retval  A pointer to ACPI board HOB ACPI_BOARD_INFO. Null if build HOB failure.
+**/
+ACPI_BOARD_INFO *
+BuildHobFromAcpi (
+  IN   UINT64  AcpiTableBase
+  );
+
 
 #endif

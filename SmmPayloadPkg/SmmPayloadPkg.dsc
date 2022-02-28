@@ -83,10 +83,11 @@
   LocalApicLib|UefiCpuPkg/Library/BaseXApicX2ApicLib/BaseXApicX2ApicLib.inf
   MtrrLib|UefiCpuPkg/Library/MtrrLib/MtrrLib.inf
   UefiCpuLib|UefiCpuPkg/Library/BaseUefiCpuLib/BaseUefiCpuLib.inf
-  #PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
   TimerLib|SmmPayloadPkg/Library/AcpiTimerLib/BaseAcpiTimerLib.inf
   VmgExitLib|UefiCpuPkg/Library/VmgExitLibNull/VmgExitLibNull.inf
 
+[LibraryClasses.X64.SEC]
+  PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
 
 [LibraryClasses.X64.MM_CORE_STANDALONE]
   StandaloneMmCoreEntryPoint|StandaloneMmPkg/Library/StandaloneMmCoreEntryPoint/StandaloneMmCoreEntryPoint.inf
@@ -156,7 +157,7 @@
 
 [Components.X64]
 
-  #SmmPayloadPkg/SmmPayloadEntry/SmmPayloadEntry.inf
+  SmmPayloadPkg/SmmPayloadEntry/SmmPayloadEntry.inf
 
   StandaloneMmPkg/Core/StandaloneMmCore.inf
 

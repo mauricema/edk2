@@ -6,7 +6,8 @@
 **/
 
 #include "SmmPayloadEntry.h"
-
+#include <UniversalPayload/SerialPortInfo.h>
+#include <UniversalPayload/AcpiTable.h>
 #include <Guid/MpInformation.h>
 
 #pragma pack(1)
@@ -205,7 +206,7 @@ AddNewHob (
 **/
 EFI_STATUS
 EFIAPI
-BuildMpInfoHob (
+BuildSmmMpInfoHob (
   IN   EFI_PEI_HOB_POINTERS  Hob
   )
 {
@@ -249,6 +250,76 @@ BuildMpInfoHob (
 }
 
 
+
+/**
+  Performs platform specific initialization required for the CPU to access
+  the hardware associated with a SerialPortLib instance.  This function does
+  not initialize the serial port hardware itself.  Instead, it initializes
+  hardware devices that are required for the CPU to access the serial port
+  hardware.  This function may be called more than once.
+
+  @retval RETURN_SUCCESS       The platform specific initialization succeeded.
+  @retval RETURN_DEVICE_ERROR  The platform specific initialization could not be completed.
+
+**/
+STATIC
+RETURN_STATUS
+EFIAPI
+PlatformHookSerialPortInitialize (
+  IN CONST VOID      *HobStart
+  )
+{
+  RETURN_STATUS                       Status;
+  UNIVERSAL_PAYLOAD_SERIAL_PORT_INFO  *SerialPortInfo;
+  UINT8                               *GuidHob;
+  UNIVERSAL_PAYLOAD_GENERIC_HEADER    *GenericHeader;
+
+  GuidHob = GetNextGuidHob (&gUniversalPayloadSerialPortInfoGuid, HobStart);
+  if (GuidHob == NULL) {
+    return EFI_NOT_FOUND;
+  }
+
+  GenericHeader = (UNIVERSAL_PAYLOAD_GENERIC_HEADER *)GET_GUID_HOB_DATA (GuidHob);
+  if ((sizeof (UNIVERSAL_PAYLOAD_GENERIC_HEADER) > GET_GUID_HOB_DATA_SIZE (GuidHob)) || (GenericHeader->Length > GET_GUID_HOB_DATA_SIZE (GuidHob))) {
+    return EFI_NOT_FOUND;
+  }
+
+  if (GenericHeader->Revision == UNIVERSAL_PAYLOAD_SERIAL_PORT_INFO_REVISION) {
+    SerialPortInfo = (UNIVERSAL_PAYLOAD_SERIAL_PORT_INFO *)GET_GUID_HOB_DATA (GuidHob);
+    if (GenericHeader->Length < UNIVERSAL_PAYLOAD_SIZEOF_THROUGH_FIELD (UNIVERSAL_PAYLOAD_SERIAL_PORT_INFO, RegisterBase)) {
+      //
+      // Return if can't find the Serial Port Info Hob with enough length
+      //
+      return EFI_NOT_FOUND;
+    }
+
+    Status = PcdSetBoolS (PcdSerialUseMmio, SerialPortInfo->UseMmio);
+    if (RETURN_ERROR (Status)) {
+      return Status;
+    }
+
+    Status = PcdSet64S (PcdSerialRegisterBase, SerialPortInfo->RegisterBase);
+    if (RETURN_ERROR (Status)) {
+      return Status;
+    }
+
+    Status = PcdSet32S (PcdSerialRegisterStride, SerialPortInfo->RegisterStride);
+    if (RETURN_ERROR (Status)) {
+      return Status;
+    }
+
+    Status = PcdSet32S (PcdSerialBaudRate, SerialPortInfo->BaudRate);
+    if (RETURN_ERROR (Status)) {
+      return Status;
+    }
+
+    return RETURN_SUCCESS;
+  }
+
+  return EFI_NOT_FOUND;
+}
+
+
 /**
   Entry point to the C language phase of UEFI payload.
 
@@ -271,13 +342,18 @@ _ModuleEntryPoint (
   EFI_HOB_RESOURCE_DESCRIPTOR   *PhitResourceHob;
   EFI_HOB_RESOURCE_DESCRIPTOR   *ResourceHob;
   BOOLEAN                       Required;
+  UNIVERSAL_PAYLOAD_ACPI_TABLE  *TableInfo;
+
+  Hob.Raw           = (UINT8 *)BootloaderParameter;
+
+  PlatformHookSerialPortInitialize (Hob.Raw);
 
   // Call constructor for all libraries
   ProcessLibraryConstructorList ();
 
   DEBUG ((DEBUG_INFO, "Entering SMM Payload...\n"));
 
-  Hob.Raw           = (UINT8 *)BootloaderParameter;
+
   MinimalNeededSize = SIZE_256KB;
 
   ASSERT (Hob.Raw != NULL);
@@ -343,10 +419,17 @@ _ModuleEntryPoint (
   while (!END_OF_HOB_LIST (Hob)) {
     Required = FALSE;
     if (Hob.Header->HobType == EFI_HOB_TYPE_GUID_EXTENSION) {
-      if (CompareGuid (&Hob.Guid->Name, &gEfiSmmSmramMemoryGuid)) {
+      if (CompareGuid (&Hob.Guid->Name, &gUniversalPayloadSerialPortInfoGuid)) {
+        Required = TRUE;
+      } else if (CompareGuid (&Hob.Guid->Name, &gEfiSmmSmramMemoryGuid)) {
+        Required = TRUE;
+      } else if (CompareGuid (&Hob.Guid->Name, &gSmmRegisterInfoGuid)) {
         Required = TRUE;
       } else if (CompareGuid (&Hob.Guid->Name, &gLoaderMpCpuTaskInfoGuid)) {
-        BuildMpInfoHob (Hob);
+        BuildSmmMpInfoHob (Hob);
+      } else if (CompareGuid (&Hob.Guid->Name, &gUniversalPayloadAcpiTableGuid)) {
+        TableInfo = (UNIVERSAL_PAYLOAD_ACPI_TABLE *)GET_GUID_HOB_DATA (Hob);
+        BuildHobFromAcpi (TableInfo->Rsdp);
       }
     }
     if (Required) {
