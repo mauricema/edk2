@@ -6,23 +6,12 @@
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
+#include <PiPei.h>
 #include <Library/DebugLib.h>
 #include <Library/IoLib.h>
+#include <Library/HobLib.h>
 #include <Library/PciLib.h>
-
-#include "Q35MchIch9.h"
-
-#define ICH9_PMBASE_VALUE 0x1800
-
-//
-// Common bits in same-purpose registers
-//
-#define PMBA_RTE BIT0
-
-//
-// Common IO ports relative to the Power Management Base Address
-//
-#define ACPI_TIMER_OFFSET 0x8
+#include <Guid/AcpiBoardInfoGuid.h>
 
 //
 // Cached ACPI Timer IO Address
@@ -42,35 +31,19 @@ AcpiTimerLibConstructor (
   VOID
   )
 {
-  UINTN Pmba;
-  UINT32 PmbaAndVal;
-  UINT32 PmbaOrVal;
-  UINTN AcpiCtlReg;
-  UINT8 AcpiEnBit;
-
-  Pmba       = POWER_MGMT_REGISTER_Q35 (ICH9_PMBASE);
-  PmbaAndVal = ~(UINT32)ICH9_PMBASE_MASK;
-  PmbaOrVal  = ICH9_PMBASE_VALUE;
-  AcpiCtlReg = POWER_MGMT_REGISTER_Q35 (ICH9_ACPI_CNTL);
-  AcpiEnBit  = ICH9_ACPI_CNTL_ACPI_EN;
+  EFI_HOB_GUID_TYPE  *GuidHob;
+  ACPI_BOARD_INFO    *pAcpiBoardInfo;
 
   //
-  // Check to see if the Power Management Base Address is already enabled
+  // Find the acpi board information guid hob
   //
-  if ((PciRead8 (AcpiCtlReg) & AcpiEnBit) == 0) {
-    //
-    // If the Power Management Base Address is not programmed,
-    // then program it now.
-    //
-    PciAndThenOr32 (Pmba, PmbaAndVal, PmbaOrVal);
+  GuidHob = GetFirstGuidHob (&gUefiAcpiBoardInfoGuid);
+  ASSERT (GuidHob != NULL);
 
-    //
-    // Enable PMBA I/O port decodes
-    //
-    PciOr8 (AcpiCtlReg, AcpiEnBit);
-  }
+  pAcpiBoardInfo = (ACPI_BOARD_INFO *)GET_GUID_HOB_DATA (GuidHob);
 
-  mAcpiTimerIoAddr = (PciRead32 (Pmba) & ~PMBA_RTE) + ACPI_TIMER_OFFSET;
+  mAcpiTimerIoAddr = (UINT32)pAcpiBoardInfo->PmTimerRegBase;
+
   return RETURN_SUCCESS;
 }
 

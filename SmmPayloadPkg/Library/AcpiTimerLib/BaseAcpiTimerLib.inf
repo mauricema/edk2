@@ -24,7 +24,11 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
   SmmPayloadPkg/SmmPayloadPkg.dec
+
+[Guids]
+  gUefiAcpiBoardInfoGuid
 
 [LibraryClasses]
   BaseLib

@@ -18,7 +18,7 @@
   VERSION_STRING                 = 1.0
   PI_SPECIFICATION_VERSION       = 0x00010032
   LIBRARY_CLASS                  = HobLib|MM_STANDALONE
-  CONSTRUCTOR                    = HobLibConstructor
+
 
 #
 #  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
@@ -34,6 +34,7 @@
   BaseMemoryLib
   DebugLib
   MmServicesTableLib
+  #HobListLib
 
 [Guids]
   gEfiHobListGuid                               ## CONSUMES  ## SystemTable

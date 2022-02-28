@@ -1,0 +1,42 @@
+## @file
+#  Platform Hook Library instance for UART device for Universal Payload.
+#
+#  Copyright (c) 2021, Intel Corporation. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PlatformHookLib
+  FILE_GUID                      = 41D0254B-9BA2-49DE-B5DD-3EA7DD1C6939
+  MODULE_TYPE                    = MM_STANDALONE
+  VERSION_STRING                 = 1.0
+  PI_SPECIFICATION_VERSION       = 0x00010032
+  LIBRARY_CLASS                  = PlatformHookLib|MM_STANDALONE
+  CONSTRUCTOR                    = PlatformHookSerialPortConstructor
+
+[Sources]
+  StandaloneMmPlatformHookLib.c
+
+[LibraryClasses]
+  BaseLib
+  HobListLib
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  UefiPayloadPkg/UefiPayloadPkg.dec
+  StandaloneMmPkg/StandaloneMmPkg.dec
+
+[Guids]
+  gEfiHobListGuid
+  gUniversalPayloadSerialPortInfoGuid
+
+
+[Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio         ## PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase    ## PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate        ## PRODUCES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride  ## PRODUCES

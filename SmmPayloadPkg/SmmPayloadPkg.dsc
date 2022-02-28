@@ -25,6 +25,8 @@
   OUTPUT_DIRECTORY                    = Build/SmmPayloadPkgX64
   FLASH_DEFINITION                    = SmmPayloadPkg/SmmPayloadPkg.fdf
 
+  DEFINE      PLATFORM_TYPE           = REAL
+
 [BuildOptions]
   *_*_*_CC_FLAGS                 = -D DISABLE_NEW_DEPRECATED_INTERFACES
   GCC:*_UNIXGCC_*_CC_FLAGS       = -DMDEPKG_NDEBUG
@@ -61,7 +63,8 @@
   #
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
   BaseMemoryLib|MdePkg/Library/BaseMemoryLibRepStr/BaseMemoryLibRepStr.inf
-  DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
+  #DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
+  DebugLib|SmmPayloadPkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   PrintLib|MdePkg/Library/BasePrintLib/BasePrintLib.inf
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
   SerialPortLib|MdeModulePkg/Library/BaseSerialPortLib16550/BaseSerialPortLib16550.inf
@@ -80,9 +83,10 @@
   LocalApicLib|UefiCpuPkg/Library/BaseXApicX2ApicLib/BaseXApicX2ApicLib.inf
   MtrrLib|UefiCpuPkg/Library/MtrrLib/MtrrLib.inf
   UefiCpuLib|UefiCpuPkg/Library/BaseUefiCpuLib/BaseUefiCpuLib.inf
-  PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
+  #PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
   TimerLib|SmmPayloadPkg/Library/AcpiTimerLib/BaseAcpiTimerLib.inf
   VmgExitLib|UefiCpuPkg/Library/VmgExitLibNull/VmgExitLibNull.inf
+
 
 [LibraryClasses.X64.MM_CORE_STANDALONE]
   StandaloneMmCoreEntryPoint|StandaloneMmPkg/Library/StandaloneMmCoreEntryPoint/StandaloneMmCoreEntryPoint.inf
@@ -90,10 +94,11 @@
   MemLib|StandaloneMmPkg/Library/StandaloneMmMemLib/StandaloneMmMemLib.inf
   MemoryAllocationLib|StandaloneMmPkg/Library/StandaloneMmCoreMemoryAllocationLib/StandaloneMmCoreMemoryAllocationLib.inf
   HobLib|StandaloneMmPkg/Library/StandaloneMmCoreHobLib/StandaloneMmCoreHobLib.inf
-  DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
+  #DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
   FvLib|StandaloneMmPkg/Library/FvLib/FvLib.inf
   ExtractGuidedSectionLib|StandaloneMmPkg/Library/SimpleExtractGuidedSectionLib/SimpleExtractGuidedSectionLib.inf
+  PlatformHookLib|SmmPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
 
 [LibraryClasses.X64.MM_STANDALONE]
@@ -102,12 +107,18 @@
   MemLib|StandaloneMmPkg/Library/StandaloneMmMemLib/StandaloneMmMemLib.inf
   MemoryAllocationLib|StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
   HobLib|StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
+  HobListLib|StandaloneMmPkg/Library/StandaloneMmHobListLib/StandaloneMmHobListLib.inf
   SmmCpuPlatformHookLib|UefiCpuPkg/Library/SmmCpuPlatformHookLibNull/SmmCpuPlatformHookLibNull.inf
   CpuExceptionHandlerLib|UefiCpuPkg/Library/CpuExceptionHandlerLib/SmmCpuExceptionHandlerLib.inf
+!if $(PLATFORM_TYPE) == QEMU
   SmmCpuFeaturesLib|SmmPayloadPkg/Library/SmmCpuFeaturesLib/SmmCpuFeaturesLibStandalone.inf
-  DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
+!else
+  SmmCpuFeaturesLib|UefiCpuPkg/Library/SmmCpuFeaturesLib/StandaloneMmCpuFeaturesLib.inf
+!endif
+  #DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
   ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
   PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+  PlatformHookLib|StandaloneMmPkg/Library/StandaloneMmPlatformHookLib/StandaloneMmPlatformHookLib.inf
 
 ################################################################################
 #
@@ -132,10 +143,23 @@
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel        | 0x80000047
 !endif
 
+  #
+  # The following parameters are set by Library/PlatformHookLib
+  #
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialUseMmio|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate|115200
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterStride|1
+
+[PcdsFeatureFlag]
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuSmmEnableBspElection | FALSE
+
 [Components.X64]
 
-  SmmPayloadPkg/SmmPayloadEntry/SmmPayloadEntry.inf
+  #SmmPayloadPkg/SmmPayloadEntry/SmmPayloadEntry.inf
 
   StandaloneMmPkg/Core/StandaloneMmCore.inf
 
   StandaloneMmPkg/Drivers/StandaloneMmCpu/X64/PiSmmCpuStandaloneSmm.inf
+
+  SmmPayloadPkg/SmmSwSmiHandler/SmmSwSmiHandler.inf

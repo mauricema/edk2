@@ -229,9 +229,10 @@ def Prebuild(target, toolchain):
     print('End of PreBuild...')
 
 
-def Build (target, toolchain):
-    cmd = '%s -p SmmPayloadPkg/SmmPayloadPkg.dsc -a X64 -b %s -t %s -y Report%s.log' % (
-        'build' if os.name == 'posix' else 'build.bat', target, toolchain, target)
+def Build (target, toolchain, platform = 'REAL'):
+    cmd = '%s -p SmmPayloadPkg/SmmPayloadPkg.dsc -a X64 -b %s -t %s -DPLATFORM_TYPE=%s -y Report%s.log' % (
+        'build' if os.name == 'posix' else 'build.bat', target, toolchain, platform, target)
+    print (cmd)
     ret = subprocess.call(cmd.split(' '))
     if ret:
         Fatal('Failed to do Build SMM Payload!')
@@ -247,21 +248,24 @@ def PostBuild (target, toolchain):
 def Main():
     pld_dir      = os.path.dirname (os.path.realpath(__file__))
 
-    if len(sys.argv) < 2:
-        target = 'DEBUG'
-    else:
-        if sys.argv[1] == '/r':
-            target = 'RELEASE'
-        elif sys.argv[1] == '/d':
-            target = 'DEBUG'
-        else:
-            print ('Unknown target %s !' % sys.argv[1])
-            return -1
+    target   = 'DEBUG'
+    platform = 'REAL'
+    if len(sys.argv) > 1:
+        for each in sys.argv[1:]:
+            if each == '/r':
+                target = 'RELEASE'
+            elif each == '/d':
+                target = 'DEBUG'
+            elif each == '/qemu':
+                platform = 'QEMU'
+            else:
+                print ('Unknown target %s !' % sys.argv[1])
+                return -1
 
     workspace, toolchain = prep_env()
     os.environ['WORKSPACE'] = workspace
     Prebuild  (target, toolchain)
-    Build     (target, toolchain)
+    Build     (target, toolchain, platform)
     PostBuild (target, toolchain)
 
     return 0
