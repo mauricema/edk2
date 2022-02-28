@@ -16,7 +16,7 @@
   LIBRARY_CLASS                  = PlatformHookLib
 
 [Sources]
-  PlatformHookLib.c
+  StandaloneMmCorePlatformHookLib.c
 
 [LibraryClasses]
   BaseLib

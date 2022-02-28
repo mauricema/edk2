@@ -85,6 +85,8 @@
   UefiCpuLib|UefiCpuPkg/Library/BaseUefiCpuLib/BaseUefiCpuLib.inf
   TimerLib|SmmPayloadPkg/Library/AcpiTimerLib/BaseAcpiTimerLib.inf
   VmgExitLib|UefiCpuPkg/Library/VmgExitLibNull/VmgExitLibNull.inf
+  PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+  ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
 
 [LibraryClasses.X64.SEC]
   PlatformHookLib|MdeModulePkg/Library/BasePlatformHookLibNull/BasePlatformHookLibNull.inf
@@ -95,31 +97,25 @@
   MemLib|StandaloneMmPkg/Library/StandaloneMmMemLib/StandaloneMmMemLib.inf
   MemoryAllocationLib|StandaloneMmPkg/Library/StandaloneMmCoreMemoryAllocationLib/StandaloneMmCoreMemoryAllocationLib.inf
   HobLib|StandaloneMmPkg/Library/StandaloneMmCoreHobLib/StandaloneMmCoreHobLib.inf
-  #DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
-  ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
   FvLib|StandaloneMmPkg/Library/FvLib/FvLib.inf
-  ExtractGuidedSectionLib|StandaloneMmPkg/Library/SimpleExtractGuidedSectionLib/SimpleExtractGuidedSectionLib.inf
-  PlatformHookLib|SmmPayloadPkg/Library/PlatformHookLib/PlatformHookLib.inf
-  PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+  ExtractGuidedSectionLib|SmmPayloadPkg/Library/SimpleExtractGuidedSectionLib/SimpleExtractGuidedSectionLib.inf
+  PlatformHookLib|SmmPayloadPkg/Library/StandaloneMmCorePlatformHookLib/StandaloneMmCorePlatformHookLib.inf
 
 [LibraryClasses.X64.MM_STANDALONE]
   StandaloneMmDriverEntryPoint|MdePkg/Library/StandaloneMmDriverEntryPoint/StandaloneMmDriverEntryPoint.inf
   MmServicesTableLib|MdePkg/Library/StandaloneMmServicesTableLib/StandaloneMmServicesTableLib.inf
   MemLib|StandaloneMmPkg/Library/StandaloneMmMemLib/StandaloneMmMemLib.inf
   MemoryAllocationLib|StandaloneMmPkg/Library/StandaloneMmMemoryAllocationLib/StandaloneMmMemoryAllocationLib.inf
-  HobLib|StandaloneMmPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
-  HobListLib|StandaloneMmPkg/Library/StandaloneMmHobListLib/StandaloneMmHobListLib.inf
+  HobLib|SmmPayloadPkg/Library/StandaloneMmHobLib/StandaloneMmHobLib.inf
+  HobListLib|SmmPayloadPkg/Library/StandaloneMmHobListLib/StandaloneMmHobListLib.inf
   SmmCpuPlatformHookLib|UefiCpuPkg/Library/SmmCpuPlatformHookLibNull/SmmCpuPlatformHookLibNull.inf
   CpuExceptionHandlerLib|UefiCpuPkg/Library/CpuExceptionHandlerLib/SmmCpuExceptionHandlerLib.inf
 !if $(PLATFORM_TYPE) == QEMU
-  SmmCpuFeaturesLib|SmmPayloadPkg/Library/SmmCpuFeaturesLib/SmmCpuFeaturesLibStandalone.inf
+  SmmCpuFeaturesLib|SmmPayloadPkg/Library/QemuSmmCpuFeaturesLib/SmmCpuFeaturesLibStandalone.inf
 !else
   SmmCpuFeaturesLib|UefiCpuPkg/Library/SmmCpuFeaturesLib/StandaloneMmCpuFeaturesLib.inf
 !endif
-  #DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
-  ReportStatusCodeLib|MdePkg/Library/BaseReportStatusCodeLibNull/BaseReportStatusCodeLibNull.inf
-  PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
-  PlatformHookLib|StandaloneMmPkg/Library/StandaloneMmPlatformHookLib/StandaloneMmPlatformHookLib.inf
+  PlatformHookLib|SmmPayloadPkg/Library/StandaloneMmPlatformHookLib/StandaloneMmPlatformHookLib.inf
 
 ################################################################################
 #
@@ -161,6 +157,6 @@
 
   StandaloneMmPkg/Core/StandaloneMmCore.inf
 
-  StandaloneMmPkg/Drivers/StandaloneMmCpu/X64/PiSmmCpuStandaloneSmm.inf
+  SmmPayloadPkg/StandaloneMmCpu/PiSmmCpuStandaloneSmm.inf
 
   SmmPayloadPkg/SmmSwSmiHandler/SmmSwSmiHandler.inf

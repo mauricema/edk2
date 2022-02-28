@@ -17,6 +17,9 @@
 #include <Library/HobLib.h>
 #include <Guid/MpCpuTaskInfoHob.h>
 #include <Guid/AcpiBoardInfoGuid.h>
+#include <Register/Intel/Cpuid.h>
+#include <Register/Intel/Msr.h>
+#include <Register/Intel/LocalApic.h>
 
 /**
   Auto-generated function that calls the library constructors for all of the module's

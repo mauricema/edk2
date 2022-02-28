@@ -38,6 +38,7 @@
   MdeModulePkg/MdeModulePkg.dec
   StandaloneMmPkg/StandaloneMmPkg.dec
   SmmPayloadPkg/SmmPayloadPkg.dec
+  UefiCpuPkg/UefiCpuPkg.dec
   UefiPayloadPkg/UefiPayloadPkg.dec
 
 [LibraryClasses]

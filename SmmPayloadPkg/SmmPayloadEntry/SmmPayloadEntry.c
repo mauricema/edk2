@@ -193,6 +193,175 @@ AddNewHob (
 }
 
 
+
+/**
+  Get Package ID/Core ID/Thread ID of a processor.
+
+  The algorithm assumes the target system has symmetry across physical
+  package  boundaries with respect to the number of logical processors
+  per package,  number of cores per package.
+
+  @param[in]  InitialApicId  Initial APIC ID of the target logical processor.
+  @param[out]  Package       Returns the processor package ID.
+  @param[out]  Core          Returns the processor core ID.
+  @param[out]  Thread        Returns the processor thread ID.
+**/
+VOID
+EFIAPI
+GetCpuLocationByApicId (
+  IN  UINT32  InitialApicId,
+  OUT UINT32  *Package  OPTIONAL,
+  OUT UINT32  *Core    OPTIONAL,
+  OUT UINT32  *Thread  OPTIONAL
+  )
+{
+  BOOLEAN                             TopologyLeafSupported;
+  CPUID_VERSION_INFO_EBX              VersionInfoEbx;
+  CPUID_VERSION_INFO_EDX              VersionInfoEdx;
+  CPUID_CACHE_PARAMS_EAX              CacheParamsEax;
+  CPUID_EXTENDED_TOPOLOGY_EAX         ExtendedTopologyEax;
+  CPUID_EXTENDED_TOPOLOGY_EBX         ExtendedTopologyEbx;
+  CPUID_EXTENDED_TOPOLOGY_ECX         ExtendedTopologyEcx;
+  UINT32                              MaxStandardCpuIdIndex;
+  UINT32                              MaxExtendedCpuIdIndex;
+  UINT32                              SubIndex;
+  UINTN                               LevelType;
+  UINT32                              MaxLogicProcessorsPerPackage;
+  UINT32                              MaxCoresPerPackage;
+  UINTN                               ThreadBits;
+  UINTN                               CoreBits;
+
+  //
+  // Check if the processor is capable of supporting more than one logical processor.
+  //
+  AsmCpuid (CPUID_VERSION_INFO, NULL, NULL, NULL, &VersionInfoEdx.Uint32);
+  if (VersionInfoEdx.Bits.HTT == 0) {
+    if (Thread != NULL) {
+      *Thread = 0;
+    }
+
+    if (Core != NULL) {
+      *Core = 0;
+    }
+
+    if (Package != NULL) {
+      *Package = 0;
+    }
+
+    return;
+  }
+
+  //
+  // Assume three-level mapping of APIC ID: Package|Core|Thread.
+  //
+  ThreadBits = 0;
+  CoreBits   = 0;
+
+  //
+  // Get max index of CPUID
+  //
+  AsmCpuid (CPUID_SIGNATURE, &MaxStandardCpuIdIndex, NULL, NULL, NULL);
+  AsmCpuid (CPUID_EXTENDED_FUNCTION, &MaxExtendedCpuIdIndex, NULL, NULL, NULL);
+
+  //
+  // If the extended topology enumeration leaf is available, it
+  // is the preferred mechanism for enumerating topology.
+  //
+  TopologyLeafSupported = FALSE;
+  if (MaxStandardCpuIdIndex >= CPUID_EXTENDED_TOPOLOGY) {
+    AsmCpuidEx (
+      CPUID_EXTENDED_TOPOLOGY,
+      0,
+      &ExtendedTopologyEax.Uint32,
+      &ExtendedTopologyEbx.Uint32,
+      &ExtendedTopologyEcx.Uint32,
+      NULL
+      );
+    //
+    // If CPUID.(EAX=0BH, ECX=0H):EBX returns zero and maximum input value for
+    // basic CPUID information is greater than 0BH, then CPUID.0BH leaf is not
+    // supported on that processor.
+    //
+    if (ExtendedTopologyEbx.Uint32 != 0) {
+      TopologyLeafSupported = TRUE;
+
+      //
+      // Sub-leaf index 0 (ECX= 0 as input) provides enumeration parameters to extract
+      // the SMT sub-field of x2APIC ID.
+      //
+      LevelType = ExtendedTopologyEcx.Bits.LevelType;
+      ASSERT (LevelType == CPUID_EXTENDED_TOPOLOGY_LEVEL_TYPE_SMT);
+      ThreadBits = ExtendedTopologyEax.Bits.ApicIdShift;
+
+      //
+      // Software must not assume any "level type" encoding
+      // value to be related to any sub-leaf index, except sub-leaf 0.
+      //
+      SubIndex = 1;
+      do {
+        AsmCpuidEx (
+          CPUID_EXTENDED_TOPOLOGY,
+          SubIndex,
+          &ExtendedTopologyEax.Uint32,
+          NULL,
+          &ExtendedTopologyEcx.Uint32,
+          NULL
+          );
+        LevelType = ExtendedTopologyEcx.Bits.LevelType;
+        if (LevelType == CPUID_EXTENDED_TOPOLOGY_LEVEL_TYPE_CORE) {
+          CoreBits = ExtendedTopologyEax.Bits.ApicIdShift - ThreadBits;
+          break;
+        }
+
+        SubIndex++;
+      } while (LevelType != CPUID_EXTENDED_TOPOLOGY_LEVEL_TYPE_INVALID);
+    }
+  }
+
+  if (!TopologyLeafSupported) {
+    //
+    // Get logical processor count
+    //
+    AsmCpuid (CPUID_VERSION_INFO, NULL, &VersionInfoEbx.Uint32, NULL, NULL);
+    MaxLogicProcessorsPerPackage = VersionInfoEbx.Bits.MaximumAddressableIdsForLogicalProcessors;
+
+    //
+    // Assume single-core processor
+    //
+    MaxCoresPerPackage = 1;
+
+    //
+    // Check for topology extensions on AMD processor
+    //
+    {
+      //
+      // Extract core count based on CACHE information
+      //
+      if (MaxStandardCpuIdIndex >= CPUID_CACHE_PARAMS) {
+        AsmCpuidEx (CPUID_CACHE_PARAMS, 0, &CacheParamsEax.Uint32, NULL, NULL, NULL);
+        if (CacheParamsEax.Uint32 != 0) {
+          MaxCoresPerPackage = CacheParamsEax.Bits.MaximumAddressableIdsForLogicalProcessors + 1;
+        }
+      }
+    }
+
+    ThreadBits = (UINTN)(HighBitSet32 (MaxLogicProcessorsPerPackage / MaxCoresPerPackage - 1) + 1);
+    CoreBits   = (UINTN)(HighBitSet32 (MaxCoresPerPackage - 1) + 1);
+  }
+
+  if (Thread != NULL) {
+    *Thread = InitialApicId & ((1 << ThreadBits) - 1);
+  }
+
+  if (Core != NULL) {
+    *Core = (InitialApicId >> ThreadBits) & ((1 << CoreBits) - 1);
+  }
+
+  if (Package != NULL) {
+    *Package = (InitialApicId >> (ThreadBits + CoreBits));
+  }
+}
+
 /**
   The Entry point of the MP CPU PEIM
 
@@ -216,6 +385,9 @@ BuildSmmMpInfoHob (
   MY_MP_INFORMATION_HOB_DATA    MpInformationData;
   UINTN                         Index;
   EFI_PROCESSOR_INFORMATION    *ProcessorInfo;
+  UINT32                        Package;
+  UINT32                        Core;
+  UINT32                        Thread;
 
   ZeroMem (&MpInformationData, sizeof(MpInformationData));
 
@@ -235,9 +407,11 @@ BuildSmmMpInfoHob (
     if (Index == 0) {
       ProcessorInfo->StatusFlag |= 4;
     }
-    ProcessorInfo->Location.Package = 0;
-    ProcessorInfo->Location.Core    = SysCpuInfo->CpuInfo[Index].ApicId >> 1;
-    ProcessorInfo->Location.Thread  = SysCpuInfo->CpuInfo[Index].ApicId & 1;
+
+    GetCpuLocationByApicId (SysCpuInfo->CpuInfo[Index].ApicId, &Package, &Core, &Thread);
+    ProcessorInfo->Location.Package = Package;
+    ProcessorInfo->Location.Core    = Core;
+    ProcessorInfo->Location.Thread  = Thread;
   }
 
   BuildGuidDataHob (

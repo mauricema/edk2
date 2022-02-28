@@ -31,9 +31,8 @@
 #include <Guid/SmramMemoryReserve.h>
 #include <Guid/MmCoreData.h>
 
-#include "Q35MchIch9.h"
-
-
+#define ICH_APM_CNT 0xB2
+#define ICH_APM_STS 0xB3
 
 /**
   Find a file within a volume by its type.
@@ -209,8 +208,8 @@ SmmControlPeiTrigger (
   // Write to the status register first, as this won't trigger the SMI just
   // yet. Then write to the control register.
   //
-  IoWrite8 (ICH9_APM_STS, 0);
-  IoWrite8 (ICH9_APM_CNT, Data);
+  IoWrite8 (ICH_APM_STS, 0);
+  IoWrite8 (ICH_APM_CNT, Data);
   return EFI_SUCCESS;
 }
 
